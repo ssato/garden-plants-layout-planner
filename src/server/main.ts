@@ -1,4 +1,9 @@
-import { getAllGardenData, saveAllGardenData } from './sheet_service';
+import {
+  deleteGardenLayout,
+  getInitialGardenState,
+  loadGardenLayout,
+  saveGardenLayout,
+} from './sheet_service';
 
 function doGet() {
   return HtmlService.createHtmlOutputFromFile('index')
@@ -6,8 +11,9 @@ function doGet() {
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
-// GASランタイムのグローバルスコープへ公開
 const g = globalThis as Record<string, unknown>;
 g.doGet = doGet;
-g.getAllGardenData = getAllGardenData;
-g.saveAllGardenData = saveAllGardenData;
+g.getInitialGardenState = getInitialGardenState;
+g.loadGardenLayout = loadGardenLayout;
+g.saveGardenLayout = saveGardenLayout;
+g.deleteGardenLayout = deleteGardenLayout;

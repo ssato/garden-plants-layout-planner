@@ -98,6 +98,10 @@ export class GardenCanvasManager {
     return { plants: this.plants, shapes: this.shapes };
   }
 
+  public getCmPerGrid(): number {
+    return this.cmPerGrid;
+  }
+
   public setMode(mode: DrawMode): void {
     this.mode = mode;
     this.transformer.nodes([]);

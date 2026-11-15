@@ -10,6 +10,65 @@ body {
   color: #333;
 }
 
+/* レイアウト管理バー */
+.layout-bar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  padding: 10px 14px;
+  background: #e8f5e9;
+  border: 1px solid #c8e6c9;
+  border-radius: 8px;
+}
+
+.layout-field {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.layout-field label {
+  margin: 0;
+  font-size: 12px;
+  color: #1b5e20;
+  white-space: nowrap;
+}
+
+.layout-field select {
+  padding: 5px 8px;
+  font-size: 13px;
+  font-weight: bold;
+  min-width: 170px;
+  background: #fff;
+}
+
+.layout-field input[type="text"] {
+  padding: 5px 8px;
+  font-size: 13px;
+  background: #fff;
+}
+
+#layoutNameInput {
+  width: 180px;
+}
+
+#layoutIdInput {
+  width: 130px;
+  font-family: monospace;
+}
+
+.quota-badge {
+  font-size: 11px;
+  font-weight: bold;
+  background: #2e7d32;
+  color: #fff;
+  padding: 3px 7px;
+  border-radius: 10px;
+}
+
+/* ツールバー */
 .toolbar {
   display: flex;
   gap: 10px;
@@ -40,6 +99,11 @@ button:hover {
   opacity: 0.9;
 }
 
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .btn-add {
   background: #2e7d32;
   color: #fff;
@@ -50,9 +114,21 @@ button:hover {
   color: #fff;
 }
 
+.btn-sub {
+  background: #fff;
+  color: #2e7d32;
+  border: 1px solid #2e7d32;
+}
+
 .btn-delete {
   background: #c62828;
   color: #fff;
+}
+
+.btn-delete-outline {
+  background: #fff;
+  color: #c62828;
+  border: 1px solid #ef9a9a;
 }
 
 .btn-cancel {
@@ -116,7 +192,8 @@ button:hover {
 
 .status {
   font-size: 13px;
-  color: #555;
+  color: #1b5e20;
+  font-weight: bold;
   margin-left: auto;
 }
 

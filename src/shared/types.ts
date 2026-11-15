@@ -34,13 +34,28 @@ export interface FreehandShapeData {
 
 export type ShapeData = RectShapeData | FreehandShapeData;
 
+export interface LayoutMeta {
+  id: string;
+  name: string;
+  cmPerGrid: number;
+  updatedAt: string;
+}
+
 export interface GardenPayload {
+  layout: LayoutMeta;
   plants: PlantData[];
   shapes: ShapeData[];
 }
 
+export interface InitialLoadResult {
+  layouts: LayoutMeta[];
+  activeGarden: GardenPayload;
+}
+
 export interface SaveResult {
   status: 'ok';
+  layouts: LayoutMeta[];
+  savedLayout: LayoutMeta;
   plantCount: number;
   shapeCount: number;
 }

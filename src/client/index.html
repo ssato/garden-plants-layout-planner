@@ -8,6 +8,32 @@
 </head>
 <body>
 
+<!-- レイアウト案管理バー -->
+<div class="layout-bar">
+  <div class="layout-field">
+    <label for="layoutSelect">レイアウト案:</label>
+    <select id="layoutSelect"></select>
+    <span class="quota-badge" id="layoutQuota">0 / 24</span>
+  </div>
+
+  <div class="layout-field">
+    <label for="layoutNameInput">名前:</label>
+    <input type="text" id="layoutNameInput" placeholder="例: 春の玄関アプローチ案" />
+  </div>
+
+  <div class="layout-field">
+    <label for="layoutIdInput">ID:</label>
+    <input type="text" id="layoutIdInput" placeholder="例: spring_2026" />
+  </div>
+
+  <button class="btn-save" id="btnSaveAll">保存（上書き / 新規ID保存）</button>
+  <button class="btn-sub" id="btnNewBlankLayout">＋ 白紙の新規案</button>
+  <button class="btn-delete-outline" id="btnDeleteLayout">この案を削除</button>
+
+  <span class="status" id="status">読み込み中...</span>
+</div>
+
+<!-- 描画・植物操作ツールバー -->
 <div class="toolbar">
   <div class="mode-group">
     <button class="mode-btn active" data-mode="select">👆 選択・移動</button>
@@ -26,7 +52,6 @@
   <span class="divider">|</span>
 
   <button class="btn-add" id="btnAddPlant">＋ 植物を追加</button>
-  <button class="btn-save" id="btnSaveAll">スプレッドシートに保存</button>
 
   <label class="control-item checkbox-label">
     <input type="checkbox" id="snapToggle" checked />
@@ -38,8 +63,6 @@
     <input type="number" id="cmPerGrid" value="10" min="1" max="500" />
     <span>cm</span>
   </div>
-
-  <span class="status" id="status">読み込み中...</span>
 </div>
 
 <div class="canvas-wrapper">
