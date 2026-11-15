@@ -12,6 +12,15 @@ It lets you sketch garden boundaries using rectangles or freehand drawing, arran
 
 - Google Sheets Backend: All layout coordinates and plant records are stored directly in Google Sheets for effortless backup and spreadsheet access.
 
+# Setup
+
+1. Google スプレッドシートを新規作成し、「拡張機能 > Apps Script」でスクリプトを作成する（本アプリはスプレッドシートにバインドされた GAS を前提とします）。
+2. `.clasp.json.example` を `.clasp.json` にコピーし、`scriptId` を作成した GAS プロジェクトの ID に書き換える。
+3. `npm install` の後、`npm run deploy`（ビルド + `clasp push`）を実行する。
+4. Apps Script エディタから「デプロイ > 新しいデプロイ > ウェブアプリ」で公開する。
+
+ローカルでの動作確認は `npm run dev`（Vite）で行えます。GAS 外では保存先がブラウザの localStorage になります。
+
 # Info
 
 - Author: Satoru SATOH

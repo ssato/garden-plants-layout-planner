@@ -31,10 +31,47 @@ const PLAN_HEADERS = [
   '手入れメモ_or_PointsJSON',
 ];
 
+const MAX_SHEET_NAME_LENGTH = 100; // Google スプレッドシートの上限
+
+// シート名に使えない文字 (\ / ? * [ ] :) と、エスケープ文字 '%' を %XX 形式にする。
+// 変換は単射なので、異なる ID が同じシートに衝突しない。
+// 禁止文字を含まない既存 ID は従来と同じシート名になる（後方互換）。
 function getPlanSheetName(layoutId: string): string {
-  // シート名に使えない文字を除去し、長さを制限
-  const safeId = layoutId.replace(/[\\/?*[\]:]/g, '_').slice(0, 40);
-  return `${PLAN_SHEET_PREFIX}${safeId}`;
+  const safeId = layoutId.replace(
+    /[\\/?*[\]:%]/g,
+    (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0')
+  );
+  const name = `${PLAN_SHEET_PREFIX}${safeId}`;
+  if (name.length > MAX_SHEET_NAME_LENGTH) {
+    throw new Error(`レイアウトIDが長すぎます（シート名が${MAX_SHEET_NAME_LENGTH}文字を超えます）。`);
+  }
+  return name;
+}
+
+// 先に新しい内容を書き込み、余った旧行だけを消す（全消去→書き直しより途中失敗に強い）
+function overwriteSheet(
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
+  header: string[],
+  rows: (string | number)[][]
+): void {
+  const all = [header, ...rows];
+  sheet.getRange(1, 1, all.length, header.length).setValues(all);
+  const lastRow = sheet.getLastRow();
+  if (lastRow > all.length) {
+    sheet.getRange(all.length + 1, 1, lastRow - all.length, sheet.getMaxColumns()).clearContent();
+  }
+  sheet.setFrozenRows(1);
+}
+
+// 同時保存・削除による上書き競合を防ぐ
+function withLock<T>(fn: () => T): T {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    return fn();
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function getOrCreateIndexSheet(ss: GoogleAppsScript.Spreadsheet.Spreadsheet): GoogleAppsScript.Spreadsheet.Sheet {
@@ -163,7 +200,7 @@ export function loadGardenLayout(layoutId: string): GardenPayload {
 }
 
 // レイアウトを新規保存または上書き保存（上限24件）
-export function saveGardenLayout(payload: GardenPayload): SaveResult {
+function saveGardenLayoutUnlocked(payload: GardenPayload): SaveResult {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const indexSheet = getOrCreateIndexSheet(ss);
   const layouts = readLayoutsList(ss);
@@ -193,12 +230,6 @@ export function saveGardenLayout(payload: GardenPayload): SaveResult {
   }
 
   // 目次シートの更新
-  indexSheet.clearContents();
-  indexSheet.appendRow(INDEX_HEADERS);
-  if (layouts.length > 0) {
-    const indexRows = layouts.map((l) => [l.id, l.name, l.cmPerGrid, l.updatedAt]);
-    indexSheet.getRange(2, 1, indexRows.length, INDEX_HEADERS.length).setValues(indexRows);
-  }
 
   // 個別シート (Plan_<ID>) の更新
   const sheetName = getPlanSheetName(layoutId);
@@ -206,10 +237,6 @@ export function saveGardenLayout(payload: GardenPayload): SaveResult {
   if (!planSheet) {
     planSheet = ss.insertSheet(sheetName);
   }
-  planSheet.clearContents();
-  planSheet.appendRow(PLAN_HEADERS);
-  planSheet.setFrozenRows(1);
-
   const rows: (string | number)[][] = [];
 
   for (const p of payload.plants || []) {
@@ -269,9 +296,13 @@ export function saveGardenLayout(payload: GardenPayload): SaveResult {
     }
   }
 
-  if (rows.length > 0) {
-    planSheet.getRange(2, 1, rows.length, PLAN_HEADERS.length).setValues(rows);
-  }
+  // 個別シートを先に書き、成功してから目次を更新する
+  overwriteSheet(planSheet, PLAN_HEADERS, rows);
+  overwriteSheet(
+    indexSheet,
+    INDEX_HEADERS,
+    layouts.map((l) => [l.id, l.name, l.cmPerGrid, l.updatedAt])
+  );
 
   return {
     status: 'ok',
@@ -283,7 +314,7 @@ export function saveGardenLayout(payload: GardenPayload): SaveResult {
 }
 
 // レイアウト案の削除（目次行＋個別シート削除）
-export function deleteGardenLayout(layoutId: string): LayoutMeta[] {
+function deleteGardenLayoutUnlocked(layoutId: string): LayoutMeta[] {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const indexSheet = getOrCreateIndexSheet(ss);
   const layouts = readLayoutsList(ss);
@@ -294,10 +325,11 @@ export function deleteGardenLayout(layoutId: string): LayoutMeta[] {
 
   const nextLayouts = layouts.filter((l) => l.id !== layoutId);
 
-  indexSheet.clearContents();
-  indexSheet.appendRow(INDEX_HEADERS);
-  const indexRows = nextLayouts.map((l) => [l.id, l.name, l.cmPerGrid, l.updatedAt]);
-  indexSheet.getRange(2, 1, indexRows.length, INDEX_HEADERS.length).setValues(indexRows);
+  overwriteSheet(
+    indexSheet,
+    INDEX_HEADERS,
+    nextLayouts.map((l) => [l.id, l.name, l.cmPerGrid, l.updatedAt])
+  );
 
   const planSheet = ss.getSheetByName(getPlanSheetName(layoutId));
   if (planSheet) {
@@ -305,4 +337,12 @@ export function deleteGardenLayout(layoutId: string): LayoutMeta[] {
   }
 
   return nextLayouts;
+}
+
+export function saveGardenLayout(payload: GardenPayload): SaveResult {
+  return withLock(() => saveGardenLayoutUnlocked(payload));
+}
+
+export function deleteGardenLayout(layoutId: string): LayoutMeta[] {
+  return withLock(() => deleteGardenLayoutUnlocked(layoutId));
 }

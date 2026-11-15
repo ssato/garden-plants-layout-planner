@@ -17,6 +17,16 @@ const TYPE_COLORS: Record<PlantType, string> = {
   '種まき': 'rgba(3, 169, 244, 0.50)',
 };
 
+// '#rgb' / '#rrggbb' を rgba() に変換する（それ以外の形式はそのまま返す）
+function withAlpha(color: string, alpha: number): string {
+  const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(color.trim());
+  if (!m) return color;
+  let hex = m[1];
+  if (hex.length === 3) hex = hex.split('').map((c) => c + c).join('');
+  const n = parseInt(hex, 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}
+
 export class GardenCanvasManager {
   public readonly stageWidth = 900;
   public readonly stageHeight = 600;
@@ -53,6 +63,11 @@ export class GardenCanvasManager {
     this.gridLayer = new Konva.Layer();
     this.shapeLayer = new Konva.Layer();
     this.plantLayer = new Konva.Layer();
+
+    // グリッド・枠線は操作対象ではないので hit 判定を無効化する
+    // （空白クリック時に e.target が stage になり、選択解除が効くようにする）
+    this.gridLayer.listening(false);
+    this.shapeLayer.listening(false);
 
     this.stage.add(this.gridLayer);
     this.stage.add(this.shapeLayer);
@@ -208,7 +223,7 @@ export class GardenCanvasManager {
           height: 0,
           stroke: this.strokeColor,
           strokeWidth: 3,
-          fill: this.strokeColor + '18',
+          fill: withAlpha(this.strokeColor, 0.1),
         });
         this.shapeLayer.add(this.currentDrawingNode);
       } else if (this.mode === 'freehand') {
@@ -309,7 +324,7 @@ export class GardenCanvasManager {
             height: shape.height,
             stroke: shape.color || '#795548',
             strokeWidth: 3,
-            fill: (shape.color || '#795548') + '18',
+            fill: withAlpha(shape.color || '#795548', 0.1),
           })
         );
       } else if (shape.type === 'freehand') {
@@ -375,6 +390,8 @@ export class GardenCanvasManager {
       group.add(label);
       group.add(sizeText);
 
+      let isDragging = false;
+
       group.on('dragmove', () => {
         if (this.snapEnabled) {
           group.x(this.snapValue(group.x(), this.gridSize));
@@ -384,6 +401,7 @@ export class GardenCanvasManager {
       });
 
       group.on('dragend', () => {
+        isDragging = false;
         plant.x = group.x();
         plant.y = group.y();
         this.updatePlantHud(plant);
@@ -418,7 +436,6 @@ export class GardenCanvasManager {
         this.callbacks.onDataChange();
       });
 
-      let isDragging = false;
       group.on('dragstart', () => {
         isDragging = true;
         this.transformer.nodes([group]);
