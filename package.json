@@ -4,9 +4,11 @@
   "description": "Garden Layout & Plant Manager is a lightweight web application built with Google Apps Script and Konva.js.",
   "main": "index.js",
   "scripts": {
-    "build:server": "esbuild src/server/main.ts --bundle --outfile=dist/code.js --format=iife --global-name=_entry",
+    "dev": "vite",
+    "copy:manifest": "node -e \"fs.mkdirSync('dist',{recursive:true}); fs.copyFileSync('appsscript.json','dist/appsscript.json')\"",
+    "build:server": "esbuild src/server/main.ts --bundle --outfile=dist/code.js --format=iife",
     "build:client": "vite build",
-    "build": "npm run build:server && npm run build:client",
+    "build": "npm run copy:manifest && npm run build:server && npm run build:client",
     "deploy": "npm run build && clasp push",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -29,5 +31,8 @@
     "typescript": "^7.0.2",
     "vite": "^8.3.8",
     "vite-plugin-singlefile": "^2.3.4"
+  },
+  "dependencies": {
+    "konva": "^9.3.16"
   }
 }
