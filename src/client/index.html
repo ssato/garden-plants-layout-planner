@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ガーデンレイアウト管理</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="mode-group">
+    <button class="mode-btn active" data-mode="select">👆 選択・移動</button>
+    <button class="mode-btn" data-mode="rect">▭ 矩形を描く</button>
+    <button class="mode-btn" data-mode="freehand">✎ フリーハンド</button>
+  </div>
+
+  <div class="control-item">
+    <span>線の色:</span>
+    <input type="color" id="strokeColor" value="#795548" />
+  </div>
+
+  <button class="btn-cancel" id="btnUndoShape">↩ 枠線1つ戻す</button>
+  <button class="btn-cancel" id="btnClearShapes">枠線全消去</button>
+
+  <span class="divider">|</span>
+
+  <button class="btn-add" id="btnAddPlant">＋ 植物を追加</button>
+  <button class="btn-save" id="btnSaveAll">スプレッドシートに保存</button>
+
+  <label class="control-item checkbox-label">
+    <input type="checkbox" id="snapToggle" checked />
+    グリッド吸着
+  </label>
+
+  <div class="control-item">
+    <span>1マス＝</span>
+    <input type="number" id="cmPerGrid" value="10" min="1" max="500" />
+    <span>cm</span>
+  </div>
+
+  <span class="status" id="status">読み込み中...</span>
+</div>
+
+<div class="canvas-wrapper">
+  <div class="measure-hud" id="measureHud">1マス = 10cm</div>
+  <div id="canvas-container"></div>
+</div>
+
+<!-- 詳細入力ダイアログ -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>植物の詳細情報</h3>
+    <input type="hidden" id="editId" />
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="f_species">品目</label>
+        <input type="text" id="f_species" placeholder="例: タイム" />
+      </div>
+      <div class="form-group">
+        <label for="f_name">名前（品種名）</label>
+        <input type="text" id="f_name" placeholder="例: クリーピングタイム" />
+      </div>
+      <div class="form-group">
+        <label for="f_label">ラベル（キャンバス表示用）</label>
+        <input type="text" id="f_label" placeholder="例: C.タイム" />
+      </div>
+      <div class="form-group">
+        <label for="f_type">種類</label>
+        <select id="f_type">
+          <option value="多年草">多年草</option>
+          <option value="一年草">一年草</option>
+          <option value="球根">球根</option>
+          <option value="低木・樹木">低木・樹木</option>
+          <option value="種まき">種まき</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="f_height">草丈</label>
+        <input type="text" id="f_height" placeholder="例: 10〜15cm" />
+      </div>
+      <div class="form-group">
+        <label for="f_flowering">花期</label>
+        <input type="text" id="f_flowering" placeholder="例: 4月〜6月" />
+      </div>
+      <div class="form-group">
+        <label for="f_plantedDate">植付け日</label>
+        <input type="date" id="f_plantedDate" />
+      </div>
+      <div class="form-group">
+        <label for="f_spreadInfo">現在の株張り（直径換算）</label>
+        <input type="text" id="f_spreadInfo" disabled />
+      </div>
+      <div class="form-group full">
+        <label for="f_memo">手入れの方法・メモ</label>
+        <textarea id="f_memo" placeholder="剪定時期、水やり、肥料などのメモ"></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-delete" id="btnDeletePlant">削除</button>
+      <div class="modal-actions-right">
+        <button class="btn-cancel" id="btnCloseModal">キャンセル</button>
+        <button class="btn-add" id="btnApplyModal">反映</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="./main.ts"></script>
+</body>
+</html>
